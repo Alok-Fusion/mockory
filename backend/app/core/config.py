@@ -9,7 +9,7 @@ AUDIO_TEMP_DIR = BASE_DATA_DIR / "audio_temp"
 AUDIO_TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Rory Mock Interview"
+    PROJECT_NAME: str = "Mockory"
     VERSION: str = "1.0.0"
     
     # Ollama LLM Configuration

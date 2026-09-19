@@ -139,7 +139,7 @@ def generate_pdf_report(report_data: Dict[str, Any]) -> bytes:
     elements = []
     
     # Title
-    elements.append(Paragraph("Rory Mock Interview - Performance Report", title_style))
+    elements.append(Paragraph("Mockory - Performance Report", title_style))
     elements.append(Spacer(1, 10))
     
     # Summary

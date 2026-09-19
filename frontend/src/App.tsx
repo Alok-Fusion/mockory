@@ -34,9 +34,9 @@ export const App: React.FC = () => {
             </div>
             <div>
               <span className="font-bold text-base text-slate-100 tracking-tight flex items-center gap-1.5">
-                Rory <span className="text-brand-400 font-extrabold text-xs px-2 py-0.5 rounded-full bg-brand-500/20">AI</span>
+                Mockory <span className="text-brand-400 font-extrabold text-xs px-2 py-0.5 rounded-full bg-brand-500/20">AI</span>
               </span>
-              <p className="text-[10px] text-slate-400 leading-none">Self Mock Interview Platform</p>
+              <p className="text-[10px] text-slate-400 leading-none">AI Interview Platform with Rory</p>
             </div>
           </div>
 
@@ -105,7 +105,7 @@ export const App: React.FC = () => {
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/40 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>Rory Mock Interview • Offline &amp; Local First (Ollama + Whisper + Kokoro)</span>
+          <span>Mockory • Offline &amp; Local First (Ollama + Whisper + Kokoro)</span>
           <div className="flex items-center gap-3 text-slate-400">
             <span>Interview Model: <code className="text-brand-300">{health?.interview_model || 'qwen2.5:3b'}</code></span>
             <span>•</span>

@@ -141,7 +141,7 @@ export const SetupScreen: React.FC = () => {
             <span className="text-xs text-slate-400">• Powered by Ollama</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-100 tracking-tight mt-1">
-            Rory Mock Interview
+            Mockory
           </h1>
           <p className="text-sm text-slate-400 mt-1 max-w-2xl">
             Simulate realistic interview rounds with Rory. Get spoken questions, live delivery analytics, instant per-turn feedback, and a personalized study roadmap.

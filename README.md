@@ -1,6 +1,6 @@
-# Rory Mock Interview
+# Mockory
 
-> **A local-first, privacy-respecting self mock interview web platform powered by local LLMs (Ollama), faster-whisper STT, and Kokoro-ONNX TTS.**
+> **A local-first, privacy-respecting self mock interview web platform powered by local LLMs (Ollama), faster-whisper STT, and Kokoro-ONNX TTS, featuring Rory as your AI interviewer.**
 
 Rory is your AI interviewer. Paste a Job Description (JD) and your Resume (or upload PDF/DOCX/TXT), select your target rounds (Technical, Coding Discussion, System Design, HR, Engineering Manager, Behavioral STAR, Culture Fit, Case Study), and practice answering via voice, text, or both. Get real-time delivery analytics (WPM, fillers, pauses), instant per-turn feedback, first-person improved answers, and a final comprehensive evaluation report with a prioritized study plan.
 

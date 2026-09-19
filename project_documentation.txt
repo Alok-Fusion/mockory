@@ -1,10 +1,10 @@
 ================================================================================
-                    RORY MOCK INTERVIEW - TECHNICAL DOCUMENTATION
+                    MOCKORY - TECHNICAL DOCUMENTATION
 ================================================================================
 
 1. PROJECT OVERVIEW
 --------------------------------------------------------------------------------
-Rory Mock Interview is a complete, offline-first, local-first artificial 
+Mockory is a complete, offline-first, local-first artificial 
 intelligence mock interviewing platform. It simulates real-world hiring rounds 
 (Technical, System Design, Coding Concepts, HR, Behavioral / STAR, Hiring Manager, 
 Culture Fit, Case Study) through an expressive, animated AI persona named "Rory".

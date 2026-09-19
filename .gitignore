@@ -25,13 +25,11 @@ wheels/
 *.egg
 .pytest_cache/
 
-# SQLite & Data
+# SQLite & Runtime Data Cache
 *.sqlite
 *.sqlite3
 *.db
-backend/data/*.db
-backend/data/*.sqlite
-backend/data/audio_temp/
+backend/data/
 backend/models_cache/
 
 # Node & Frontend

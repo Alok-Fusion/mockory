@@ -64,8 +64,9 @@ async def export_session_markdown(session_id: str, db: Session = Depends(get_db)
         report = await generate_final_session_report(session, turns)
 
     md_lines = [
-        f"# Rory Mock Interview Report",
+        f"# Mockory Interview Evaluation Report",
         f"**Date:** {session.created_at.strftime('%Y-%m-%d %H:%M:%S')}",
+        f"**Interviewer:** Rory",
         f"**Difficulty:** {session.difficulty} | **Strictness:** {session.strictness}",
         f"**Overall Score:** {report.get('overall_score', 0.0)} / 10.0\n",
         "## Round Breakdown",
@@ -103,7 +104,7 @@ async def export_session_markdown(session_id: str, db: Session = Depends(get_db)
     return Response(
         content=md_content,
         media_type="text/markdown",
-        headers={"Content-Disposition": f"attachment; filename=rory_interview_report_{session_id[:8]}.md"}
+        headers={"Content-Disposition": f"attachment; filename=mockory_interview_report_{session_id[:8]}.md"}
     )
 
 

@@ -39,7 +39,7 @@ app.include_router(report_router)
 @app.get("/")
 def root():
     return {
-        "message": "Rory Mock Interview API Server is running",
+        "message": "Mockory API Server is running",
         "docs": "/docs",
         "health": "/api/health"
     }
