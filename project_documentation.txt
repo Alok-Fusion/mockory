@@ -1,0 +1,226 @@
+================================================================================
+                    RORY MOCK INTERVIEW - TECHNICAL DOCUMENTATION
+================================================================================
+
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+Rory Mock Interview is a complete, offline-first, local-first artificial 
+intelligence mock interviewing platform. It simulates real-world hiring rounds 
+(Technical, System Design, Coding Concepts, HR, Behavioral / STAR, Hiring Manager, 
+Culture Fit, Case Study) through an expressive, animated AI persona named "Rory".
+
+Key Core Capabilities:
+- Local LLM Orchestration via Ollama (Default: qwen2.5:3b; Swappable: llama3:latest, qwen2.5:7b).
+- Small Model Optimized: Structured compression briefs, strict schema enforcement, 
+  3-stage repair loop, small-context prompt pipelines, and code-based metric calculation.
+- Dual-Mode Avatar: Layered animated 2D SVG/Canvas avatar with real-time audio 
+  AnalyserNode lip synchronization; optional 3D VRM avatar with blendshape mapping.
+- Multimodal Input: Voice recording via MediaRecorder (WebM/Opus -> faster-whisper) 
+  and simultaneous typed text with smart merge.
+- Instant Turn Delivery Analytics: Words Per Minute (WPM), pause durations (>2s), 
+  filler word breakdown, false start detection.
+- Asynchronous Evaluation: Scores (out of 10), specific mistakes with quotes and impact, 
+  missing JD points, improved answers in user's first-person voice, and STAR checklist.
+- Deep Final Report: Overall performance, skill radar diagram, recurring weaknesses, 
+  JD gap study recommendations, question-by-question retrospective, Markdown & PDF export.
+- Complete Offline Autonomy: Zero paid API dependencies.
+
+
+2. SYSTEM ARCHITECTURE
+--------------------------------------------------------------------------------
+The application is structured into a modern decoupled architecture:
+
+                       +-----------------------------+
+                       |       Web Browser UI        |
+                       | (React 18 + Vite + Zustand) |
+                       +--------------+--------------+
+                                      |
+                       HTTP API / SSE | WebSockets/Stream
+                                      v
+                       +-----------------------------+
+                       |   FastAPI Backend Server    |
+                       |       (Python 3.10+)        |
+                       +--------------+--------------+
+                                      |
+          +---------------------------+---------------------------+
+          |                           |                           |
+          v                           v                           v
++-------------------+       +-------------------+       +-------------------+
+|   Ollama Client   |       | Local Audio Engine|       | SQLite Database   |
+| (qwen2.5 / llama3)|       | Whisper & Kokoro  |       | (SQLAlchemy ORM)  |
++-------------------+       +-------------------+       +-------------------+
+
+
+3. DATA FLOW & WORKFLOW
+--------------------------------------------------------------------------------
+
+3.1 Setup & Planning Phase
+--------------------------
+1. User provides Job Description (JD) and Resume via direct text input or file 
+   upload (.pdf, .docx, .txt).
+2. User selects interview parameters:
+   - Target Rounds (Technical, System Design, HR, Behavioral, etc.)
+   - Seniority Level (Junior, Mid, Senior)
+   - Interviewer Strictness (Friendly, Realistic, Tough)
+   - Avatar Mode (2D Animated / 3D VRM)
+   - Questions per round (Default: 6)
+3. Backend runs compressed planning tasks:
+   a. Task 1: Generate JD Brief (max 250 words) extracting must-haves, nice-to-haves, 
+      and role scope.
+   b. Task 2: Generate Resume Brief (max 300 words) summarizing role history, top 
+      project impacts, core technical stack, and education.
+   c. Task 3: Generate Interview Plan JSON mapping specific topics, resume claims 
+      to probe, skill gaps, and red flag areas.
+4. Database initializes session record with briefs, settings, and question roadmap.
+
+3.2 Interview Loop Turn Cycle
+-----------------------------
+1. Question Generation:
+   - Rory greets the candidate by name (opening turn) or delivers a brief natural 
+     acknowledgement (<12 words) followed by a targeted question (<50 words).
+   - Backend enforces strict code-level similarity checks to avoid repeating topics 
+     or questions.
+2. Question Delivery:
+   - Spoken audio generated via Kokoro-ONNX (af_heart voice) or browser SpeechSynthesis.
+   - Text caption rendered below avatar.
+   - Avatar mouth shapes animate synchronously via Web Audio AnalyserNode frequency bins.
+3. Candidate Response:
+   - Voice input recorded via MediaRecorder (WebM/Opus).
+   - Typed input supported simultaneously in the response text box.
+   - Live waveform visualization during recording.
+4. Answer Ingestion & STT:
+   - Uploaded audio transcribed using `faster-whisper` (base.en, int8 CPU) with 
+     word-level timestamps.
+   - Delivery metrics computed deterministically in Python (WPM, fillers, pauses, false starts).
+   - If both voice and typed text exist, backend runs an answer merge pipeline.
+5. Parallel Asynchronous Evaluation:
+   - Call A: Scores (Relevance, Correctness, Depth, Structure, Communication, Confidence, Overall)
+   - Call B: Specific mistakes (with quotes and rationale) + Missing JD points.
+   - Call C: First-person improved answer + Next-turn actionable tip.
+   - Aggregated evaluation saved and sent to UI side panel.
+6. Next-Action Decision Engine:
+   - Evaluates if answer warrants a Follow-Up (vague, missing metrics, technical error, resume conflict) 
+     or a New Question (topic satisfied or max 2 followups reached).
+   - Proceeds until round question quota is met or user ends interview.
+
+3.3 Final Report Assembly
+-------------------------
+1. Python backend aggregates all turn scores, delivery metrics, and mistake tags.
+2. Generates skill radar metrics and round-by-round score trends in pure code.
+3. LLM narrative calls generate:
+   - Top recurring mistakes summary
+   - Skill gap study curriculum
+   - Prioritized practice plan
+4. Frontend renders rich report with radar charts, question retrospective, and 
+   one-click export to Markdown and printable PDF.
+
+
+4. SMALL MODEL DESIGN RULES (qwen2.5:3b Optimization)
+--------------------------------------------------------------------------------
+Smaller 3B models risk hallucination, schema deviation, and context forgetting if 
+overloaded. The system applies strict architectural guardrails:
+
+1. Single Responsibility: Every LLM call performs exactly one atomic task.
+2. Short Brief Contexts: Raw JD and Resume text are never passed directly to turns. 
+   Only compressed briefs (<250 and <300 words) are injected.
+3. Context Window Capping: Turns receive only:
+   - Briefs + Current Topic Plan Slice
+   - Last 3 dialogue turns verbatim
+   - Rolling summary (<100 words) of earlier dialogue
+   - List of previously asked questions
+4. Strict JSON Schema Validation: All structured outputs use Ollama's `format` parameter 
+   backed by Pydantic schemas.
+5. 3-Attempt Repair Loop: If JSON validation fails, a lightweight repair prompt is sent. 
+   If all 3 retries fail, a deterministic fallback object is returned to prevent crashes.
+6. Code-Over-LLM: All mathematical calculations, statistics, filler counts, and deduplication 
+   are computed in Python code, not by the LLM.
+
+
+5. DIRECTORY STRUCTURE
+--------------------------------------------------------------------------------
+mock-interview/
+├── backend/
+│   ├── app/
+│   │   ├── api/             # FastAPI routers (session, turn, audio, report, health)
+│   │   ├── core/            # Config, database setup, dependencies
+│   │   ├── models/          # SQLAlchemy and Pydantic data schemas
+│   │   ├── services/        # LLM client, Audio STT/TTS, Metrics, Brief generator
+│   │   └── prompts/         # Modular small-model prompt templates
+│   ├── tests/               # Unit tests (JSON repair, metrics, dedup, decisions)
+│   ├── data/                # SQLite database and temporary audio cache
+│   └── requirements.txt     # Python dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── components/      # Avatar2D, Avatar3D, AudioRecorder, SideFeedback, etc.
+│   │   ├── pages/           # SetupScreen, InterviewRoom, ReportPage, HistoryPage
+│   │   ├── store/           # Zustand interview and audio state management
+│   │   ├── services/        # API client and speech fallback services
+│   │   └── types/           # TypeScript interfaces and schemas
+│   ├── public/              # Static assets, fallback 2D avatars, 3D VRM models
+│   ├── package.json
+│   ├── tailwind.config.js
+│   └── vite.config.ts
+├── project_documentation.txt
+├── README.md
+├── .env.example
+├── .env
+├── .gitignore
+└── start_all.bat
+
+
+6. API SPECIFICATIONS
+--------------------------------------------------------------------------------
+- POST /api/session
+  Payload: { jd_text, resume_text, rounds, difficulty, strictness, avatar_mode, questions_per_round }
+  Multipart: optional file uploads (jd_file, resume_file)
+  Response: { session_id, jd_brief, resume_brief, plan, status }
+
+- POST /api/session/{id}/next
+  Response: { turn_id, question_text, round_type, acknowledgement, audio_url, is_complete }
+
+- POST /api/session/{id}/answer
+  Payload (Multipart): { audio_file (optional), typed_text (optional) }
+  Response: { turn_id, voice_transcript, delivery_metrics, merged_answer, evaluation, next_action }
+
+- POST /api/tts
+  Payload: { text, voice }
+  Response: Audio WAV stream / URL
+
+- POST /api/stt
+  Payload (Multipart): { audio_file }
+  Response: { transcript, word_timestamps, metrics }
+
+- GET /api/session/{id}/report
+  Response: Complete finalized session report JSON
+
+- GET /api/sessions
+  Response: Array of past interview sessions and score trends
+
+- GET /api/health
+  Response: { status, ollama_connected, models_available, whisper_ready, kokoro_ready }
+
+
+7. AUDIO PIPELINE & LIP SYNCHRONIZATION
+--------------------------------------------------------------------------------
+- STT Pipeline:
+  Audio captured in browser via MediaRecorder (audio/webm;codecs=opus).
+  Sent to FastAPI -> Converted to 16kHz mono WAV via FFmpeg if necessary.
+  Processed via faster-whisper (base.en, compute_type=int8).
+  Generates word-level timestamps used to calculate speech rate and pause gaps.
+
+- TTS Pipeline:
+  Spoken text chunked by sentence.
+  Synthesized via kokoro-onnx with female voice `af_heart`.
+  WAV streamed to frontend with instant playback.
+  Fallback: Browser SpeechSynthesis choosing an English female voice.
+
+- Lip Sync Engine:
+  Web Audio API connects an AnalyserNode to the audio element.
+  RMS and frequency bands (low, mid, high) sampled at 60 FPS.
+  Mapped smoothly to 5 mouth shapes:
+    1. Closed (rest)
+    2. Small (low volume / m, b, p sounds)
+    3. Wide (i, e sounds)
+    4. Round (o, u sounds)
+    5. Open (a, ah sounds)
+  Applies smoothing algorithm to eliminate jitter.
