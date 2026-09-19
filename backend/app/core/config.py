@@ -3,9 +3,9 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
-DATA_DIR = ROOT_DIR / "backend" / "data"
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-AUDIO_TEMP_DIR = DATA_DIR / "audio_temp"
+BASE_DATA_DIR = ROOT_DIR / "backend" / "data"
+BASE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+AUDIO_TEMP_DIR = BASE_DATA_DIR / "audio_temp"
 AUDIO_TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 class Settings(BaseSettings):
@@ -32,10 +32,12 @@ class Settings(BaseSettings):
     KOKORO_VOICES_PATH: str = ""
     
     # Server & Storage
+    DATA_DIR: str = str(BASE_DATA_DIR)
+    AUDIO_TEMP_DIR: str = str(AUDIO_TEMP_DIR)
     BACKEND_HOST: str = "127.0.0.1"
     BACKEND_PORT: int = 8000
     FRONTEND_PORT: int = 5173
-    DATABASE_URL: str = f"sqlite:///{DATA_DIR / 'rory_mock.db'}"
+    DATABASE_URL: str = f"sqlite:///{BASE_DATA_DIR / 'rory_mock.db'}"
 
     class Config:
         env_file = ".env"

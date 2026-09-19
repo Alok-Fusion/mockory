@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from backend.app.models.schemas import HealthResponse
 from backend.app.services.llm import llm_service
-from backend.app.services.audio import get_whisper_model, get_kokoro_pipeline
+from backend.app.services.audio import is_whisper_ready, is_kokoro_ready
 from backend.app.core.config import settings
 
 router = APIRouter(tags=["Health"])
@@ -11,8 +11,8 @@ async def check_health():
     """Checks Ollama connection, loaded models, and audio engines."""
     llm_health = await llm_service.check_health()
     
-    whisper_ready = get_whisper_model() is not None
-    kokoro_ready = get_kokoro_pipeline() is not None
+    whisper_ready = is_whisper_ready()
+    kokoro_ready = is_kokoro_ready()
     
     fix_cmd = None
     if not llm_health["connected"]:

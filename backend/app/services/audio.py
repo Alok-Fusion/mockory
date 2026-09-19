@@ -11,25 +11,34 @@ import numpy as np
 from pypdf import PdfReader
 from docx import Document
 
-from backend.app.core.config import settings, AUDIO_TEMP_DIR
+from backend.app.core.config import settings, BASE_DATA_DIR, AUDIO_TEMP_DIR
 
 logger = logging.getLogger(__name__)
 
-# Global singletons
 _whisper_model = None
 _kokoro_pipeline = None
+
+def is_whisper_ready() -> bool:
+    """Fast non-blocking check."""
+    return _whisper_model is not None
+
+def is_kokoro_ready() -> bool:
+    """Fast non-blocking check."""
+    return _kokoro_pipeline is not None
 
 def get_whisper_model():
     global _whisper_model
     if _whisper_model is None:
         try:
             from faster_whisper import WhisperModel
+            models_dir = BASE_DATA_DIR / "models_cache"
+            models_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Loading faster-whisper model ({settings.WHISPER_MODEL_SIZE}) on {settings.WHISPER_DEVICE}...")
             _whisper_model = WhisperModel(
                 settings.WHISPER_MODEL_SIZE,
                 device=settings.WHISPER_DEVICE,
                 compute_type=settings.WHISPER_COMPUTE_TYPE,
-                download_root=str(Path(settings.DATA_DIR) / "models_cache")
+                download_root=str(models_dir)
             )
             logger.info("faster-whisper model loaded successfully.")
         except Exception as e:
@@ -45,8 +54,7 @@ def get_kokoro_pipeline():
             model_path = settings.KOKORO_MODEL_PATH
             voices_path = settings.KOKORO_VOICES_PATH
             
-            # Default lookup in models_cache if not set
-            models_dir = Path(settings.DATA_DIR) / "models_cache"
+            models_dir = BASE_DATA_DIR / "models_cache"
             models_dir.mkdir(parents=True, exist_ok=True)
             if not model_path:
                 default_m = models_dir / "kokoro-v0_19.onnx"
@@ -62,7 +70,7 @@ def get_kokoro_pipeline():
                 _kokoro_pipeline = Kokoro(model_path, voices_path)
                 logger.info("Kokoro-ONNX TTS loaded successfully.")
             else:
-                logger.info("Kokoro ONNX model files not yet found in cache. Will use web speech fallback or synthesize on download.")
+                logger.info("Kokoro ONNX model files not found in cache. Using browser speech synthesis fallback.")
         except Exception as e:
             logger.warning(f"Failed to initialize Kokoro TTS: {e}")
             _kokoro_pipeline = None
@@ -90,7 +98,6 @@ def extract_text_from_file(file_bytes: bytes, filename: str) -> str:
 
 # --- Audio STT ---
 def convert_to_wav_16k(input_path: str, output_path: str) -> bool:
-    """Convert any incoming audio file to 16kHz mono WAV using ffmpeg."""
     try:
         cmd = [
             "ffmpeg", "-y",
@@ -107,7 +114,6 @@ def convert_to_wav_16k(input_path: str, output_path: str) -> bool:
         return False
 
 def transcribe_audio_file(audio_bytes: bytes, filename: str) -> Tuple[str, List[Dict[str, Any]], float]:
-    """Transcribes audio file returning (transcript, word_timestamps, total_duration)."""
     temp_input = AUDIO_TEMP_DIR / f"upload_{filename}"
     temp_wav = AUDIO_TEMP_DIR / f"conv_{Path(filename).stem}.wav"
     
@@ -121,7 +127,6 @@ def transcribe_audio_file(audio_bytes: bytes, filename: str) -> Tuple[str, List[
 
     model = get_whisper_model()
     if model is None:
-        # Fallback if whisper isn't loaded: return empty transcript with warning
         return "", [], 0.0
 
     try:
@@ -153,7 +158,6 @@ def transcribe_audio_file(audio_bytes: bytes, filename: str) -> Tuple[str, List[
         logger.error(f"Whisper transcription failed: {e}")
         return "", [], 0.0
     finally:
-        # Cleanup temp upload files
         try:
             if temp_input.exists(): temp_input.unlink()
             if temp_wav.exists(): temp_wav.unlink()
@@ -162,12 +166,10 @@ def transcribe_audio_file(audio_bytes: bytes, filename: str) -> Tuple[str, List[
 
 # --- Audio TTS ---
 def split_sentences(text: str) -> List[str]:
-    """Split text into spoken sentence chunks."""
     sentences = re.split(r"(?<=[.!?])\s+", text.strip())
     return [s.strip() for s in sentences if s.strip()]
 
 def synthesize_speech(text: str, voice: str = "af_heart") -> Optional[bytes]:
-    """Synthesizes speech to WAV bytes using Kokoro ONNX."""
     kokoro = get_kokoro_pipeline()
     if kokoro is None:
         return None

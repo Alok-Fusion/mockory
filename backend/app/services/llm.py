@@ -3,7 +3,7 @@ import logging
 import asyncio
 from typing import Type, TypeVar, Optional, List, Dict, Any
 import httpx
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 
 from backend.app.core.config import settings
 from backend.app.models.schemas import (
